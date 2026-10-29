@@ -1,0 +1,13 @@
+{
+  "id": "happy_path_plan",
+  "caller": [
+    "yes speaking",
+    "4821",
+    "can we do $100 a month?",
+    "ok"
+  ],
+  "expected_disclosures": [
+    "mini_miranda"
+  ],
+  "expected_final_step": "confirm_plan"
+}

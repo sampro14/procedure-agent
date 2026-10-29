@@ -1,0 +1,27 @@
+{
+  "_note": "Reviewed and approved wording. Changing this file requires compliance sign-off (CODEOWNERS). The eval gate compares agent output against THIS file, not against the procedure.",
+  "disclosures": {
+    "recording": {
+      "text": "This call may be recorded for quality and compliance purposes.",
+      "always": true,
+      "must_precede": ["last four digits"]
+    },
+    "mini_miranda": {
+      "text": "This communication is from a debt collector. This is an attempt to collect a debt, and any information obtained will be used for that purpose.",
+      "always": false,
+      "must_precede": ["balance of"],
+      "required_when": "any agent turn states the debt balance"
+    },
+    "validation_notice": {
+      "text": "You have the right to dispute this debt in writing within 30 days of receiving this notice. If you do, we will stop collection until we mail you verification of the debt.",
+      "always": false,
+      "required_when": "caller disputes the debt"
+    },
+    "cease_ack": {
+      "text": "We will stop contacting you about this debt, except to confirm that we are ending collection or to notify you of specific legal action.",
+      "always": false,
+      "required_when": "caller asks to stop contact"
+    }
+  },
+  "limits": {"min_monthly_payment": 100.00, "max_months": 12}
+}

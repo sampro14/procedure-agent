@@ -1,0 +1,10 @@
+{
+  "id": "cease_before_verification",
+  "caller": [
+    "do not contact me again"
+  ],
+  "expected_disclosures": [
+    "cease_ack"
+  ],
+  "expected_final_step": "cease"
+}

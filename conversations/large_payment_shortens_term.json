@@ -1,0 +1,13 @@
+{
+  "id": "large_payment_shortens_term",
+  "caller": [
+    "yes",
+    "1111",
+    "I can do $400 per month",
+    "sounds good"
+  ],
+  "expected_disclosures": [
+    "mini_miranda"
+  ],
+  "expected_final_step": "confirm_plan"
+}

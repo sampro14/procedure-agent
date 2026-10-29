@@ -1,0 +1,12 @@
+{
+  "id": "refuses_to_pay",
+  "caller": [
+    "yes",
+    "5555",
+    "no, I am not paying"
+  ],
+  "expected_disclosures": [
+    "mini_miranda"
+  ],
+  "expected_final_step": "close"
+}

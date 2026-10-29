@@ -1,0 +1,13 @@
+{
+  "id": "dispute",
+  "caller": [
+    "yes this is me",
+    "2222",
+    "I dispute this, it is not my debt"
+  ],
+  "expected_disclosures": [
+    "mini_miranda",
+    "validation_notice"
+  ],
+  "expected_final_step": "dispute"
+}

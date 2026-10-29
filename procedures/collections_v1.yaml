@@ -1,0 +1,56 @@
+# Written procedure for a (fictional) debt collection chat agent.
+# This file is the single source of truth: the agent reads it, the evals read it.
+id: collections_v1
+version: 1.0.0
+agent_name: Alex
+company: Northgate Recovery
+debt:
+  creditor: Summit Credit Card
+  balance: 1200.00
+
+# Legally required wording. The agent never paraphrases these: they are emitted
+# verbatim from here. The eval suite checks them against compliance/approved_disclosures.json,
+# a separately reviewed copy, so editing this file cannot silently change what the gate expects.
+disclosures:
+  recording:
+    text: "This call may be recorded for quality and compliance purposes."
+  mini_miranda:
+    text: "This communication is from a debt collector. This is an attempt to collect a debt, and any information obtained will be used for that purpose."
+  validation_notice:
+    text: "You have the right to dispute this debt in writing within 30 days of receiving this notice. If you do, we will stop collection until we mail you verification of the debt."
+  cease_ack:
+    text: "We will stop contacting you about this debt, except to confirm that we are ending collection or to notify you of specific legal action."
+
+# Hard limits set by the client. Enforced in code (PaymentPlan), not only in prompts.
+negotiation:
+  min_monthly_payment: 100.00
+  max_months: 12
+  min_down_payment: 0.00
+
+# State machine. Each step names the text the agent says; {placeholders} are filled in code.
+steps:
+  greet:
+    say: "Hello, this is {agent_name} from {company}."
+    disclose: [recording]
+    ask: "Am I speaking with the account holder?"
+  verify_identity:
+    say: "Thank you. To confirm who you are, please tell me the last four digits of your account number."
+  state_debt:
+    disclose: [mini_miranda]
+    ask: "Our records show a balance of ${balance} with {creditor}. How would you like to resolve it today?"
+  negotiate:
+    ask: "I can set up a plan of ${amount} per month for {months} months. Would that work for you?"
+  counter:
+    ask: "The lowest monthly payment I can offer is ${amount} per month, for {months} months. Would that work for you?"
+  confirm_plan:
+    say: "Great. I have set up ${amount} per month for {months} months. Thank you for your time."
+  dispute:
+    disclose: [validation_notice]
+    say: "I have noted your dispute."
+  cease:
+    disclose: [cease_ack]
+    ask: "Goodbye."
+  wrong_person:
+    say: "Sorry for the interruption. I cannot discuss this matter. Goodbye."
+  close:
+    say: "Thank you for your time. Goodbye."

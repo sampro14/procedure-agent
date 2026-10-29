@@ -1,0 +1,16 @@
+name: eval-gate
+on: [push, pull_request]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    env:
+      DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - name: Unit tests (guardrails, intents, agent)
+        run: pytest tests -q
+      - name: Replay eval gate (blocks the release on any disclosure or limit violation)
+        run: pytest evals -q

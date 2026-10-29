@@ -1,0 +1,13 @@
+[project]
+name = "procedure-agent"
+version = "0.1.0"
+description = "A chat agent that follows a written procedure, with a replay-based DeepEval gate for required disclosures."
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6", "deepeval>=3", "pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "evals"]
+pythonpath = ["src", "."]

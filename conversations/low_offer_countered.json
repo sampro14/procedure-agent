@@ -1,0 +1,13 @@
+{
+  "id": "low_offer_countered",
+  "caller": [
+    "yeah this is him",
+    "9034",
+    "I can only pay $40 a month",
+    "fine"
+  ],
+  "expected_disclosures": [
+    "mini_miranda"
+  ],
+  "expected_final_step": "confirm_plan"
+}

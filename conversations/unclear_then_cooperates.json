@@ -1,0 +1,15 @@
+{
+  "id": "unclear_then_cooperates",
+  "caller": [
+    "hmm who is this",
+    "yes ok that is me",
+    "1234",
+    "what is this about",
+    "$150 a month",
+    "yes"
+  ],
+  "expected_disclosures": [
+    "mini_miranda"
+  ],
+  "expected_final_step": "confirm_plan"
+}

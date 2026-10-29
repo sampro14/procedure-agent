@@ -1,0 +1,13 @@
+{
+  "id": "cease_contact",
+  "caller": [
+    "speaking",
+    "3333",
+    "stop calling me"
+  ],
+  "expected_disclosures": [
+    "mini_miranda",
+    "cease_ack"
+  ],
+  "expected_final_step": "cease"
+}
