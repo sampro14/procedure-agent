@@ -1,16 +1,46 @@
 # procedure-agent
 
+[![eval-gate](https://github.com/sampro14/procedure-agent/actions/workflows/eval-gate.yml/badge.svg)](https://github.com/sampro14/procedure-agent/actions/workflows/eval-gate.yml)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![DeepEval](https://img.shields.io/badge/evals-DeepEval-purple)
+![No API key](https://img.shields.io/badge/API%20key-not%20needed-brightgreen)
+
 A small chat agent that follows a **written procedure**, plus a **replay-based eval gate** (DeepEval) that checks every legally required disclosure **word for word** before a change can ship.
 
 The scenario is a fictional debt-collection call. The point is the engineering pattern for regulated conversations: *the procedure is data, the wording is verbatim, the limits are enforced in code, and nothing ships unless the replay suite passes.*
 
+## At a glance
+
+- **Verbatim disclosures:** legal wording is copied from the procedure, never generated or reworded.
+- **Limits that cannot be broken:** offers only come from `PaymentPlan`, which refuses out-of-bounds terms.
+- **A gate that is tested too:** 9 replayed calls, 3 deterministic metrics, and 8 deliberate regressions the gate must catch.
+- **Explainable turns:** every reply carries a decision trace (step, state, intent, disclosures, offer).
+
+## Demo
+
+A caller asks for less than the client allows. The agent delivers the required notices in order and counters at the minimum:
+
+```text
+agent> Hello, this is Alex from Northgate Recovery. This call may be recorded for quality and compliance purposes. Am I speaking with the account holder?
+  you> yes speaking
+agent> Thank you. To confirm who you are, please tell me the last four digits of your account number.
+  you> 4821
+agent> This communication is from a debt collector. This is an attempt to collect a debt, and any information obtained will be used for that purpose. Our records show a balance of $1200.00 with Summit Credit Card. How would you like to resolve it today?
+  you> can we do $40 a month?
+agent> The lowest monthly payment I can offer is $100.00 per month, for 12 months. Would that work for you?
+  you> ok
+agent> Great. I have set up $100.00 per month for 12 months. Thank you for your time.
 ```
-procedures/collections_v1.yaml     the written procedure (steps, wording, limits)
-src/procagent/                     agent, intent layer, guardrails
-compliance/approved_disclosures.json   separately approved wording the gate checks against
-conversations/*.json               recorded caller scripts, replayed through the current agent
-evals/                             DeepEval metrics + the gate + tests of the gate
-```
+
+## Project layout
+
+| Path | What it holds |
+|---|---|
+| `procedures/collections_v1.yaml` | the written procedure: steps, wording, limits |
+| `src/procagent/` | agent state machine, intent layer, guardrails, CLI |
+| `compliance/approved_disclosures.json` | separately approved wording the gate checks against |
+| `conversations/*.json` | recorded caller scripts, replayed through the current agent |
+| `evals/` | DeepEval metrics, the gate, and tests of the gate |
 
 ## Architecture
 
@@ -51,7 +81,10 @@ Key idea: the procedure drives the agent, but the gate compares output against a
 ## Run it
 
 ```bash
+git clone https://github.com/sampro14/procedure-agent.git && cd procedure-agent
+python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
+export DEEPEVAL_TELEMETRY_OPT_OUT=YES        # keep DeepEval from sending usage data
 python -m procagent.cli                      # talk to the agent
 python -m evals.replay conversations/dispute.json   # replay one call and print the transcript
 pytest tests          # unit tests: guardrails, intents, agent behaviour
