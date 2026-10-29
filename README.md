@@ -12,6 +12,42 @@ conversations/*.json               recorded caller scripts, replayed through the
 evals/                             DeepEval metrics + the gate + tests of the gate
 ```
 
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Authoring["Authoring (reviewed like code)"]
+        P["procedures/collections_v1.yaml<br/>steps, wording, limits"]
+        A["compliance/approved_disclosures.json<br/>approved wording + ordering rules"]
+    end
+
+    subgraph Runtime["Runtime: src/procagent"]
+        C["Caller message"] --> I["intent.py<br/>rules first, optional LLM fallback"]
+        I --> S["agent.py<br/>state machine"]
+        P --> S
+        S --> G["guardrails.py<br/>PaymentPlan enforces limits"]
+        G --> S
+        S --> T["Turn + decision trace<br/>step, state, intent, disclosures, offer"]
+    end
+
+    subgraph Gate["Release gate: evals/ (DeepEval)"]
+        R["conversations/*.json<br/>recorded caller scripts"] --> RP["replay.py<br/>run through CURRENT agent"]
+        T --> RP
+        RP --> M1["VerbatimDisclosureMetric"]
+        RP --> M2["DisclosureOrderMetric"]
+        RP --> M3["OfferWithinLimitsMetric"]
+        A --> M1
+        A --> M2
+        A --> M3
+        M1 & M2 & M3 --> CI{"CI: all pass?"}
+    end
+
+    CI -- yes --> SHIP["Release"]
+    CI -- no --> BLOCK["Blocked"]
+```
+
+Key idea: the procedure drives the agent, but the gate compares output against a *separate* approved copy of the wording.
+
 ## Run it
 
 ```bash
