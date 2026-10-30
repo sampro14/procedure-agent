@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>procedure-agent · live demo</title>
+<meta name="description" content="A chat agent that follows a written procedure, copies legal disclosures word for word, and enforces payment limits in code. Runs in your browser.">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --ink: #1c2330; --muted: #5b6577; --line: #e3e6eb;
+    --accent: #2f5bea; --accent-ink: #fff; --agent: #eef2ff; --caller: #2f5bea;
+    --disc: #fff4cc; --disc-line: #e9c84a; --ok: #1f8a4c; --bad: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11141a; --card: #191d25; --ink: #e6e9ef; --muted: #98a2b3; --line: #2a303b;
+      --accent: #6d8cff; --accent-ink: #0b0e14; --agent: #222a3a; --caller: #4a6cf0;
+      --disc: #3b3417; --disc-line: #8a7426; --ok: #4cc27f; --bad: #ff7b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  a { color: var(--accent); }
+  header { max-width: 1120px; margin: 0 auto; padding: 28px 20px 8px; }
+  header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.01em; }
+  header h1 span { color: var(--muted); font-weight: 500; }
+  header p { margin: 0; color: var(--muted); max-width: 760px; }
+  .links { margin-top: 10px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+  main { max-width: 1120px; margin: 0 auto; padding: 16px 20px 40px; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0; padding: 14px 16px 10px; }
+
+  /* chat */
+  .chat { display: flex; flex-direction: column; height: 640px; }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; padding-right: 12px; border-bottom: 1px solid var(--line); }
+  #log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 86%; padding: 10px 13px; border-radius: 12px; white-space: pre-wrap; }
+  .msg.agent { background: var(--agent); align-self: flex-start; border-bottom-left-radius: 4px; cursor: pointer; border: 1px solid transparent; }
+  .msg.agent.selected { border-color: var(--accent); }
+  .msg.caller { background: var(--caller); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .msg.system { align-self: center; color: var(--muted); font-size: 13px; background: none; }
+  .who { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.65; margin-bottom: 2px; }
+  mark.disc { background: var(--disc); color: inherit; border-bottom: 2px solid var(--disc-line); padding: 0 1px; border-radius: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px 0; border-top: 1px solid var(--line); }
+  .chip { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; }
+  .chip:hover:not(:disabled) { border-color: var(--accent); }
+  form { display: flex; gap: 8px; padding: 10px 16px 16px; }
+  input[type=text] { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  button:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* side panels */
+  .side { display: flex; flex-direction: column; gap: 18px; }
+  .trace { padding: 0 16px 16px; }
+  .kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 10px; font-size: 14px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; word-break: break-word; }
+  .disc-item { margin-top: 10px; padding: 9px 11px; border-radius: 8px; background: var(--bg); border-left: 3px solid var(--disc-line); font-size: 13px; }
+  .disc-item .tag { font-family: ui-monospace, Menlo, monospace; font-weight: 600; }
+  .pass { color: var(--ok); font-weight: 600; }
+  .fail { color: var(--bad); font-weight: 600; }
+  .note { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+  .limits { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 16px; }
+  .pill { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+  .pill b { display: block; font-size: 15px; }
+  .scenarios { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 16px 16px; }
+  .scenarios button { text-align: left; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+  .scenarios button:hover:not(:disabled) { border-color: var(--accent); }
+  .scenarios small { display: block; color: var(--muted); font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+
+  .explain { max-width: 1120px; margin: 0 auto; padding: 0 20px 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 860px) { .explain { grid-template-columns: 1fr; } }
+  .explain .card { padding: 16px; }
+  .explain h3 { margin: 0 0 6px; font-size: 15px; }
+  .explain p { margin: 0; color: var(--muted); font-size: 14px; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 20px 32px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>procedure-agent <span>· live demo</span></h1>
+  <p>A debt-collection chat agent that follows a written procedure. Legal disclosures are copied word for word, payment limits are enforced in code, and every reply records why it was said. The real Python agent runs in your browser. There is no server and no LLM.</p>
+  <div class="links">
+    <a href="https://github.com/sampro14/procedure-agent">View the code on GitHub</a>
+    <a href="https://github.com/sampro14/procedure-agent#what-the-gate-checks">How the eval gate works</a>
+    <a href="https://github.com/sampro14/procedure-agent#known-limits-honest-list">Known limits</a>
+  </div>
+</header>
+
+<main>
+  <section class="card chat">
+    <div class="chat-head">
+      <h2>Call</h2>
+      <button class="ghost" id="restart" disabled>Restart call</button>
+    </div>
+    <div id="log" aria-live="polite"><div class="msg system" id="loading">Loading the Python runtime (about 10 MB, first visit only)…</div></div>
+    <div class="chips" id="chips"></div>
+    <form id="form">
+      <input type="text" id="input" placeholder="Type as the caller…" autocomplete="off" disabled>
+      <button class="primary" id="send" disabled>Send</button>
+    </form>
+  </section>
+
+  <div class="side">
+    <section class="card">
+      <h2>Why the agent said that</h2>
+      <div class="trace" id="trace"><p class="note">Click any agent message to inspect its decision trace.</p></div>
+    </section>
+    <section class="card">
+      <h2>Client limits (from the procedure file)</h2>
+      <div class="limits" id="limits"></div>
+    </section>
+    <section class="card">
+      <h2>Replay a recorded test call</h2>
+      <div class="scenarios" id="scenarios"></div>
+    </section>
+  </div>
+</main>
+
+<section class="explain">
+  <div class="card"><h3>Disclosures are copied, never generated</h3><p>Required legal sentences live in <code>procedures/collections_v1.yaml</code> and are pasted into replies unchanged. Highlighted text in the chat is exactly that wording, checked against a separately approved copy.</p></div>
+  <div class="card"><h3>Bad offers are impossible, not unlikely</h3><p>Every offer is built by <code>PaymentPlan</code>, which refuses anything below the minimum payment or over the maximum term. Ask for $40 a month and see what happens.</p></div>
+  <div class="card"><h3>Nothing ships without the gate</h3><p>The scenarios on the right are the same recorded calls CI replays on every push. Three exact-match DeepEval metrics must pass, and this page is only deployed after they do.</p></div>
+</section>
+
+<footer>Fictional company, debt and wording. Not legal advice. Built with Python, Pyodide and DeepEval.</footer>
+
+<script>
+const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
+const SUGGESTIONS = ["yes speaking", "4821", "can we do $40 a month?", "$300 a month", "ok", "I dispute this, it is not my debt", "stop calling me", "wrong number"];
+const $ = (id) => document.getElementById(id);
+let bridge = null, turns = [], busy = false;
+
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pretty = (id) => id.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+
+function highlight(turn) {
+  let html = esc(turn.text);
+  for (const d of turn.disclosure_checks) {
+    html = html.replace(esc(d.text), `<mark class="disc" title="Required disclosure: ${d.id}">${esc(d.text)}</mark>`);
+  }
+  return html;
+}
+
+function addMessage(role, html, index) {
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.innerHTML = role === "system" ? html : `<span class="who">${role === "agent" ? "Agent" : "Caller"}</span>${html}`;
+  if (role === "agent") div.onclick = () => showTrace(index);
+  $("log").appendChild(div);
+  $("log").scrollTop = $("log").scrollHeight;
+}
+
+function showTrace(i) {
+  const t = turns[i];
+  document.querySelectorAll(".msg.agent").forEach((el, j) => el.classList.toggle("selected", j === i));
+  const offer = t.offer ? `$${t.offer.monthly.toFixed(2)} × ${t.offer.months} months` : "none";
+  let html = `<dl class="kv">
+    <dt>Step</dt><dd>${t.step}</dd>
+    <dt>State</dt><dd>${t.state}</dd>
+    <dt>Intent</dt><dd>${t.intent ?? "(opening line)"}</dd>
+    <dt>Offer</dt><dd>${offer}</dd>
+  </dl>`;
+  if (t.disclosure_checks.length) {
+    for (const d of t.disclosure_checks) {
+      html += `<div class="disc-item"><span class="tag">${d.id}</span> ·
+        ${d.verbatim ? '<span class="pass">✓ exact match with approved wording</span>' : '<span class="fail">✗ does not match approved wording</span>'}</div>`;
+    }
+  } else {
+    html += `<p class="note">No disclosure required on this turn.</p>`;
+  }
+  $("trace").innerHTML = html;
+}
+
+function record(turn) {
+  turns.push(turn);
+  addMessage("agent", highlight(turn), turns.length - 1);
+  showTrace(turns.length - 1);
+  if (turn.done) {
+    addMessage("system", "Call ended. Restart to try another path.");
+    setInputs(false);
+  }
+}
+
+function setInputs(on) {
+  $("input").disabled = $("send").disabled = !on;
+  document.querySelectorAll(".chip").forEach((c) => (c.disabled = !on));
+}
+
+function startCall() {
+  turns = [];
+  $("log").innerHTML = "";
+  record(JSON.parse(bridge.start()));
+  setInputs(true);
+  $("input").focus();
+}
+
+function say(text) {
+  text = text.trim();
+  if (!text || !turns.length || turns[turns.length - 1].done) return;
+  addMessage("caller", esc(text));
+  record(JSON.parse(bridge.respond(text)));
+}
+
+async function replay(scenario) {
+  if (busy) return;
+  busy = true;
+  document.querySelectorAll(".scenarios button, #restart").forEach((b) => (b.disabled = true));
+  startCall();
+  setInputs(false);
+  addMessage("system", `Replaying recorded call “${pretty(scenario.id)}”`);
+  for (const line of scenario.caller) {
+    await new Promise((r) => setTimeout(r, 700));
+    say(line);
+  }
+  await new Promise((r) => setTimeout(r, 300));
+  const last = turns[turns.length - 1];
+  const ok = last.step === scenario.expected_final_step;
+  addMessage("system", `Ended at step <b>${last.step}</b>, expected <b>${scenario.expected_final_step}</b>: <span class="${ok ? "pass" : "fail"}">${ok ? "✓ pass" : "✗ fail"}</span>`);
+  if (!last.done) setInputs(true);
+  document.querySelectorAll(".scenarios button, #restart").forEach((b) => (b.disabled = false));
+  busy = false;
+}
+
+async function boot() {
+  await new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = PYODIDE + "pyodide.js";
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  const [pyodide, manifest] = await Promise.all([
+    loadPyodide({ indexURL: PYODIDE }),
+    fetch("manifest.json").then((r) => r.json()),
+  ]);
+  await pyodide.loadPackage("pyyaml");
+  await Promise.all(manifest.files.map(async (rel) => {
+    const text = await (await fetch(rel)).text();
+    const path = "/app/" + rel;
+    pyodide.FS.mkdirTree(path.slice(0, path.lastIndexOf("/")));
+    pyodide.FS.writeFile(path, text);
+  }));
+  pyodide.runPython("import sys; sys.path.insert(0, '/app/py')");
+  bridge = pyodide.pyimport("bridge");
+
+  const info = JSON.parse(bridge.info());
+  $("limits").innerHTML = `
+    <div class="pill">Balance<b>$${info.balance}</b></div>
+    <div class="pill">Min monthly<b>$${info.min_monthly.toFixed(2)}</b></div>
+    <div class="pill">Max term<b>${info.max_months} months</b></div>
+    <div class="pill">Procedure<b>${info.procedure}</b></div>`;
+  $("chips").innerHTML = SUGGESTIONS.map((s) => `<button type="button" class="chip">${esc(s)}</button>`).join("");
+  document.querySelectorAll(".chip").forEach((c) => (c.onclick = () => say(c.textContent)));
+  $("scenarios").innerHTML = "";
+  for (const sc of manifest.scenarios) {
+    const b = document.createElement("button");
+    b.innerHTML = `${pretty(sc.id)}<small>ends at ${sc.expected_final_step}</small>`;
+    b.onclick = () => replay(sc);
+    $("scenarios").appendChild(b);
+  }
+  $("restart").disabled = false;
+  $("restart").onclick = startCall;
+  // Shareable deep link: #replay=<scenario id> plays that recorded call on load.
+  const wanted = manifest.scenarios.find((sc) => location.hash === `#replay=${sc.id}`);
+  wanted ? replay(wanted) : startCall();
+}
+
+$("form").onsubmit = (e) => { e.preventDefault(); say($("input").value); $("input").value = ""; };
+boot().catch((err) => {
+  $("log").innerHTML = "";
+  addMessage("system", `Could not load the Python runtime: ${esc(String(err))}. Try refreshing.`);
+});
+</script>
+</body>
+</html>
