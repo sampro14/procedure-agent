@@ -132,3 +132,7 @@ Plus an outcome check per scenario (the call must end where it should), because 
 ## Next steps
 
 Swap the stub verifier for a CRM lookup; put the agent behind a FastAPI WebSocket and add a voice loop; log traces to an observability backend; add a mutation-testing job that fuzzes disclosure text in CI; load real anonymised transcripts as replays.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
