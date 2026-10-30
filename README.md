@@ -5,6 +5,10 @@
 ![DeepEval](https://img.shields.io/badge/evals-DeepEval-purple)
 ![No API key](https://img.shields.io/badge/API%20key-not%20needed-brightgreen)
 
+### ▶ [Try the live demo](https://sampro14.github.io/procedure-agent/) · runs in your browser, no install
+
+Or jump straight to a recorded call: [caller offers too little](https://sampro14.github.io/procedure-agent/#replay=low_offer_countered) · [caller disputes the debt](https://sampro14.github.io/procedure-agent/#replay=dispute) · [caller says stop calling](https://sampro14.github.io/procedure-agent/#replay=cease_contact)
+
 A small chat agent that follows a **written procedure**, plus a **replay-based eval gate** (DeepEval) that checks every legally required disclosure **word for word** before a change can ship.
 
 The scenario is a fictional debt-collection call. The point is the engineering pattern for regulated conversations: *the procedure is data, the wording is verbatim, the limits are enforced in code, and nothing ships unless the replay suite passes.*
@@ -17,6 +21,8 @@ The scenario is a fictional debt-collection call. The point is the engineering p
 - **Explainable turns:** every reply carries a decision trace (step, state, intent, disclosures, offer).
 
 ## Demo
+
+The [live demo](https://sampro14.github.io/procedure-agent/) runs the real `procagent` package in the browser with [Pyodide](https://pyodide.org), so there is no server to keep alive. Highlighted text is a required disclosure, and the side panel shows each reply's decision trace. It is deployed by `.github/workflows/demo.yml` only after the unit tests and the replay gate pass.
 
 A caller asks for less than the client allows. The agent delivers the required notices in order and counters at the minimum:
 
@@ -41,6 +47,7 @@ agent> Great. I have set up $100.00 per month for 12 months. Thank you for your 
 | `compliance/approved_disclosures.json` | separately approved wording the gate checks against |
 | `conversations/*.json` | recorded caller scripts, replayed through the current agent |
 | `evals/` | DeepEval metrics, the gate, and tests of the gate |
+| `demo/` | the in-browser demo page, its Python bridge, and the build script |
 
 ## Architecture
 

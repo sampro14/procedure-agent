@@ -14,6 +14,7 @@ pytest evals          # release gate (replays conversations/*.json)
 pytest                # everything; must stay green
 python -m procagent.cli
 python -m evals.replay conversations/<name>.json
+python demo/build.py && python -m http.server -d _site   # live demo locally
 ```
 
 ## Invariants (do not break these)
@@ -30,6 +31,7 @@ python -m evals.replay conversations/<name>.json
 - `compliance/approved_disclosures.json`: approved wording, `always` flag, `must_precede` markers, limits
 - `evals/`: `metrics.py` (3 DeepEval BaseMetric subclasses), `replay.py`, `test_replay.py` (the gate), `test_gate_catches_regressions.py`
 - `conversations/*.json`: `{id, caller[], expected_disclosures[], expected_final_step}`
+- `demo/`: static page (Pyodide) + `bridge.py` transport + `build.py`, which bundles the real `src/`, procedure, approved JSON and scenarios into `_site/`. Deployed to GitHub Pages by `.github/workflows/demo.yml` after `pytest` passes. Keep logic out of the page and bridge.
 
 ## How to do common tasks
 - **Add a disclosure:** add text to the procedure + approved JSON (with `always`/`must_precede`), reference it in a step's `disclose`, add a scenario that triggers it, add a mutation test.
