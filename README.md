@@ -24,6 +24,8 @@ The scenario is a fictional debt-collection call. The point is the engineering p
 
 The [live demo](https://sampro14.github.io/procedure-agent/) runs the real `procagent` package in the browser with [Pyodide](https://pyodide.org), so there is no server to keep alive. Highlighted text is a required disclosure, and the side panel shows each reply's decision trace. It is deployed by `.github/workflows/demo.yml` only after the unit tests and the replay gate pass.
 
+<a href="https://sampro14.github.io/procedure-agent/"><img src="docs/assets/demo.gif" alt="Procedure agent chat countering a $40 request at the $100 minimum, with highlighted disclosures and a decision trace beside each reply" width="760" /></a>
+
 A caller asks for less than the client allows. The agent delivers the required notices in order and counters at the minimum:
 
 ```text
