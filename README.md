@@ -1,30 +1,36 @@
-# procedure-agent
+<div align="center">
+
+# Procedure Agent
+
+**A chat agent for regulated conversations: legal wording is never paraphrased, limits can't be broken, and nothing ships until the replay evals pass.**
 
 [![eval-gate](https://github.com/sampro14/procedure-agent/actions/workflows/eval-gate.yml/badge.svg)](https://github.com/sampro14/procedure-agent/actions/workflows/eval-gate.yml)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![DeepEval](https://img.shields.io/badge/evals-DeepEval-purple)
 ![No API key](https://img.shields.io/badge/API%20key-not%20needed-brightgreen)
+[![License: MIT](https://img.shields.io/badge/license-MIT-slategray)](LICENSE)
 
 ### ▶ [Try the live demo](https://sampro14.github.io/procedure-agent/) · runs in your browser, no install
 
 Or jump straight to a recorded call: [caller offers too little](https://sampro14.github.io/procedure-agent/#replay=low_offer_countered) · [caller disputes the debt](https://sampro14.github.io/procedure-agent/#replay=dispute) · [caller says stop calling](https://sampro14.github.io/procedure-agent/#replay=cease_contact)
 
-A small chat agent that follows a **written procedure**, plus a **replay-based eval gate** (DeepEval) that checks every legally required disclosure **word for word** before a change can ship.
+<a href="https://sampro14.github.io/procedure-agent/"><img src="docs/assets/demo.gif" alt="Procedure agent chat countering a $40 request at the $100 minimum, with highlighted disclosures and a decision trace beside each reply" width="820" /></a>
+
+</div>
+
+| **9 replayed calls** | **3 deterministic metrics** | **8 planted regressions** | **No server** |
+|:---:|:---:|:---:|:---:|
+| every recorded call is replayed through the current agent before release | verbatim wording, disclosure order and offer limits, with no LLM judge | the gate must fail on each one, from a paraphrase to a $40 offer | the live demo runs the real Python package in the browser with Pyodide |
+
+## Why this pattern
 
 The scenario is a fictional debt-collection call. The point is the engineering pattern for regulated conversations: *the procedure is data, the wording is verbatim, the limits are enforced in code, and nothing ships unless the replay suite passes.*
 
-## At a glance
-
-- **Verbatim disclosures:** legal wording is copied from the procedure, never generated or reworded.
-- **Limits that cannot be broken:** offers only come from `PaymentPlan`, which refuses out-of-bounds terms.
-- **A gate that is tested too:** 9 replayed calls, 3 deterministic metrics, and 8 deliberate regressions the gate must catch.
-- **Explainable turns:** every reply carries a decision trace (step, state, intent, disclosures, offer).
+The same pattern fits any conversation where wording or limits are regulated, such as collections, insurance claims, lending and healthcare intake.
 
 ## Demo
 
 The [live demo](https://sampro14.github.io/procedure-agent/) runs the real `procagent` package in the browser with [Pyodide](https://pyodide.org), so there is no server to keep alive. Highlighted text is a required disclosure, and the side panel shows each reply's decision trace. It is deployed by `.github/workflows/demo.yml` only after the unit tests and the replay gate pass.
-
-<a href="https://sampro14.github.io/procedure-agent/"><img src="docs/assets/demo.gif" alt="Procedure agent chat countering a $40 request at the $100 minimum, with highlighted disclosures and a decision trace beside each reply" width="760" /></a>
 
 A caller asks for less than the client allows. The agent delivers the required notices in order and counters at the minimum:
 
@@ -39,17 +45,6 @@ agent> The lowest monthly payment I can offer is $100.00 per month, for 12 month
   you> ok
 agent> Great. I have set up $100.00 per month for 12 months. Thank you for your time.
 ```
-
-## Project layout
-
-| Path | What it holds |
-|---|---|
-| `procedures/collections_v1.yaml` | the written procedure: steps, wording, limits |
-| `src/procagent/` | agent state machine, intent layer, guardrails, CLI |
-| `compliance/approved_disclosures.json` | separately approved wording the gate checks against |
-| `conversations/*.json` | recorded caller scripts, replayed through the current agent |
-| `evals/` | DeepEval metrics, the gate, and tests of the gate |
-| `demo/` | the in-browser demo page, its Python bridge, and the build script |
 
 ## Architecture
 
@@ -141,6 +136,20 @@ Plus an outcome check per scenario (the call must end where it should), because 
 ## Next steps
 
 Swap the stub verifier for a CRM lookup; put the agent behind a FastAPI WebSocket and add a voice loop; log traces to an observability backend; add a mutation-testing job that fuzzes disclosure text in CI; load real anonymised transcripts as replays.
+
+<details>
+<summary><b>Project layout</b></summary>
+
+| Path | What it holds |
+|---|---|
+| `procedures/collections_v1.yaml` | the written procedure: steps, wording, limits |
+| `src/procagent/` | agent state machine, intent layer, guardrails, CLI |
+| `compliance/approved_disclosures.json` | separately approved wording the gate checks against |
+| `conversations/*.json` | recorded caller scripts, replayed through the current agent |
+| `evals/` | DeepEval metrics, the gate, and tests of the gate |
+| `demo/` | the in-browser demo page, its Python bridge, and the build script |
+
+</details>
 
 ## License
 
